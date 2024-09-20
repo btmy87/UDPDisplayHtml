@@ -1,0 +1,63 @@
+<html>
+  <title>UDP Display</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="stylesheet" href="https://www.w3schools.com/w3css/4/w3.css">
+  <link rel="stylesheet" href="https://www.w3schools.com/lib/w3-theme-dark-grey.css">
+<style>
+  body {
+    background-color: black
+  }
+</style>
+<head>
+  <title>Simple client</title>
+
+  <script type="text/javascript">
+
+    var ws;
+    
+    function init() {
+
+      // Connect to Web Socket
+      ws = new WebSocket("ws://localhost:41953/");
+
+      // Set event handlers.
+      ws.onopen = function() {
+        console.log("ws.onopen")
+      };
+      
+      ws.onmessage = function(e) {
+        // e.data contains received string.
+        var divTime = document.getElementById("time");
+        var divX1 = document.getElementById("x1");
+        var divX2 = document.getElementById("x2");
+        data = JSON.parse(e.data);
+        divTime.innerHTML = "time = " + data.time[0].toFixed(4)
+        divX1.innerHTML = "x1 = " + data.x1[0].toFixed(4)
+        divX2.innerHTML = "x2 = " + data.x2[0].toFixed(4)
+      };
+      
+      ws.onerror = function(e) {
+        output("onerror");
+        console.log(e)
+      };
+
+    }
+    
+    function onCloseClick() {
+      ws.close();
+    }
+    
+  </script>
+</head>
+<body class="w3-monospace w3-theme-dark" onload="init();">
+  <div class="w3-container w3-cell w3-border" id="time">
+    <p>Time Placeholder</p>
+  </div>
+  <div class="w3-container w3-cell w3-border" id="x1">
+    <p>X1 Placeholder</p>
+  </div>
+  <div class="w3-container w3-cell w3-border" id="x2">
+    <p>X2 Placeholder</p>
+  </div>
+</body>
+</html>

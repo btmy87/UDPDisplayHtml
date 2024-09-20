@@ -28,6 +28,7 @@ def send_packets(dest, nvals, dt):
         # make a packet
         t += dt
         vals = np.sin(0.2*t + offset)
+        vals[0] = t
         buf = vals.tobytes()
         sock.sendto(buf, dest)
         time.sleep(dt)
