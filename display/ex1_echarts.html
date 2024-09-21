@@ -19,7 +19,7 @@
     
     var update_list;
     var next_time = -9999.0;
-    const UPDATE_RATE = 0.1;
+    const UPDATE_RATE = 0.02;
 
     var my_chart;
 
@@ -51,6 +51,8 @@
       }
     }
 
+    var my_chart;
+    var option;
     function init() {
       // get list of cells to update
       //update_list = Array.from(document.getElementsByClassName("mydata"));
@@ -65,11 +67,16 @@
       
       ws.onmessage = function(e) {
         // e.data contains received string.
-        //data = JSON.parse(e.data);
-        //if (data["time"][0] > next_time) {
-        //  next_time = data["time"][0] + UPDATE_RATE;
+        data = JSON.parse(e.data);
+        option.series[0].data.shift();
+        option.series[0].data.push([ data["time"][0], data["x001"][0] ]);
+        option.xAxis.max = data["time"][0];
+        option.xAxis.min = option.xAxis.max - 20;
+        if (data["time"][0] > next_time) {
+          next_time = data["time"][0] + UPDATE_RATE;
+          my_chart.setOption(option);
         //  update_list.forEach((value, index, array) => updateElement(value, data));
-        //}
+        }
       }
       
       ws.onerror = function(e) {
@@ -77,23 +84,23 @@
         console.log(e);
       }
 
-      var my_chart = echarts.init(document.getElementById('main'), 'mytheme');
-      var option = {
+      my_chart = echarts.init(document.getElementById('main'), 'mytheme');
+      option = {
+        animationDurationUpdate: 100,
         title: {
           text: "A title"
         },
         tooltip: {},
         xAxis: {},
-        yAxis: {},
+        yAxis: {min: -1.2, max: 1.2},
         series: [
           {
-            data: [ [0, 0], [1, 1], [2, 4], [3, 9] ],
+            data: Array(6000).fill( [NaN, NaN] ),
             type: 'line'
           }
         ]
       };
       my_chart.setOption(option);
-
     }
     
     function onCloseClick() {
