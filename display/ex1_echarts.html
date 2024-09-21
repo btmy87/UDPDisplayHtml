@@ -3,13 +3,15 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <link rel="stylesheet" href="https://www.w3schools.com/w3css/4/w3.css">
   <link rel="stylesheet" href="https://www.w3schools.com/lib/w3-theme-dark-grey.css">
+  <script src="../echarts-5.5.1/dist/echarts.js"></script>
+  <script src="mytheme.js"></script>
 <style>
   body {
     background-color: black
   }
 </style>
 <head>
-  <title>Simple client</title>
+  <title>ex1 echarts</title>
 
   <script type="text/javascript">
 
@@ -18,6 +20,8 @@
     var update_list;
     var next_time = -9999.0;
     const UPDATE_RATE = 0.1;
+
+    var my_chart;
 
     function updateElement(x, data) {
       // update the object x with the corresponding value
@@ -49,7 +53,7 @@
 
     function init() {
       // get list of cells to update
-      update_list = Array.from(document.getElementsByClassName("mydata"));
+      //update_list = Array.from(document.getElementsByClassName("mydata"));
 
       // Connect to Web Socket
       ws = new WebSocket("ws://localhost:41953/");
@@ -61,17 +65,34 @@
       
       ws.onmessage = function(e) {
         // e.data contains received string.
-        data = JSON.parse(e.data);
-        if (data["time"][0] > next_time) {
-          next_time = data["time"][0] + UPDATE_RATE;
-          update_list.forEach((value, index, array) => updateElement(value, data));
-        }
+        //data = JSON.parse(e.data);
+        //if (data["time"][0] > next_time) {
+        //  next_time = data["time"][0] + UPDATE_RATE;
+        //  update_list.forEach((value, index, array) => updateElement(value, data));
+        //}
       }
       
       ws.onerror = function(e) {
         output("onerror");
         console.log(e);
       }
+
+      var my_chart = echarts.init(document.getElementById('main'), 'mytheme');
+      var option = {
+        title: {
+          text: "A title"
+        },
+        tooltip: {},
+        xAxis: {},
+        yAxis: {},
+        series: [
+          {
+            data: [ [0, 0], [1, 1], [2, 4], [3, 9] ],
+            type: 'line'
+          }
+        ]
+      };
+      my_chart.setOption(option);
 
     }
     
@@ -82,47 +103,6 @@
   </script>
 </head>
 <body class="w3-monospace w3-theme-dark" onload="init();">
-  <table class="w3-table w3-large">
-    <tr>
-      <td class="mydata" id="time"></td>
-      <td class="mydata" id="x001"></td>
-      <td class="mydata" id="x002"></td>
-      <td class="mydata" id="x003"></td>
-      <td class="mydata" id="x004"></td>
-      <td class="mydata" id="x005"></td>
-    </tr>
-    <tr>
-      <td class="mydata" id="x006"></td>
-      <td class="mydata" id="x007"></td>
-      <td class="mydata" id="x008"></td>
-      <td class="mydata" id="x009"></td>
-      <td class="mydata" id="x010"></td>
-      <td class="mydata" id="x011"></td>
-    </tr>
-    <tr>
-      <td class="mydata" id="x012"></td>
-      <td class="mydata" id="x013"></td>
-      <td class="mydata" id="x014"></td>
-      <td class="mydata" id="x015"></td>
-      <td class="mydata" id="x016"></td>
-      <td class="mydata" id="x017"></td>
-    </tr>
-    <tr>
-      <td class="mydata" id="x018"></td>
-      <td class="mydata" id="x019"></td>
-      <td class="mydata" id="x020"></td>
-      <td class="mydata" id="x021"></td>
-      <td class="mydata" id="x022"></td>
-      <td class="mydata" id="x023"></td>
-    </tr>
-    <tr>
-      <td class="mydata" id="x024"></td>
-      <td class="mydata" id="x025"></td>
-      <td class="mydata" id="x026"></td>
-      <td class="mydata" id="x027"></td>
-      <td class="mydata" id="x028"></td>
-      <td class="mydata" id="x029"></td>
-    </tr>
-  </table>
+  <div id="main" style="width: 600px; height: 400px;"></div>
 </body>
 </html>

@@ -32,9 +32,11 @@ def forward_udp(p):
     while True:
         try:
             buf = sock.recv(4096)
-            out = {"time": struct.unpack_from("@d", buf, offset=0),
-                   "x1": struct.unpack_from("@d", buf, offset=8),
-                   "x2": struct.unpack_from("@d", buf, offset=400)}
+            out = {"time": struct.unpack_from("@d", buf, offset=0)}
+            n = max(200, len(buf)//8)
+            for i in range(1, n):
+                out[f"x{i:03d}"] = struct.unpack_from("@d", buf, offset=8*i)
+
             SERVER.send_message_to_all(json.dumps(out))
         except TimeoutError:
             pass
