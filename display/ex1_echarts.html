@@ -17,90 +17,117 @@
 
     var ws;
     
-    var update_list;
     var next_time = -9999.0;
-    const UPDATE_RATE = 0.02;
+    const UPDATE_RATE = 0.05;
+    var idx = 0; // index into circular buffers
 
-    var my_chart;
-
-    function updateElement(x, data) {
-      // update the object x with the corresponding value
-      // from the full json data
-      let val = data[x.id][0]
-      let sep = " = "
-      if (val >= 0) {
-        sep += "&nbsp"
-      }
-      let n = 4;
-      if (x.id == "time") { n = 2; }
-      x.innerHTML = x.id + sep + val.toFixed(n)
-
-      if (x.id == "time") {
-        return;
-      }
-
-      if (val < -0.9 & !x.classList.contains("w3-blue")) {
-        x.classList.add("w3-blue");
-      } else if (val > -0.9 & x.classList.contains("w3-blue")) {
-        x.classList.remove("w3-blue");
-      }
-      if (val > 0.9 & !x.classList.contains("w3-red")) {
-        x.classList.add("w3-red");
-      } else if (val < 0.9 & x.classList.contains("w3-red")) {
-        x.classList.remove("w3-red");
-      }
-    }
-
-    var my_chart;
-    var option;
     function init() {
-      // get list of cells to update
-      //update_list = Array.from(document.getElementsByClassName("mydata"));
-
       // Connect to Web Socket
       ws = new WebSocket("ws://localhost:41953/");
 
+      // initialize chart
+      chart = init_chart();
+
       // Set event handlers.
-      ws.onopen = function() {
-        console.log("ws.onopen");
+      ws.onopen = () => console.log("ws.onopen");
+      ws.onerror = (e) => console.log(e);
+      ws.onmessage = (e) => update_chart(e.data, chart.chart, chart.opts);
+
+      idx = 0;
+    }
+
+    function update_chart(rawData, myChart, origOption) {
+      // update chart with data
+      // get data
+      data = JSON.parse(rawData);
+
+      option = { dataset: origOption.dataset };
+
+      // if values are going to roll back to zero, we need a nan
+      // so we don't connect the lines.  This nan is already there
+      // so we just advance the index
+      let idxOld = (idx - 1) % option.dataset.source.time.length;
+      if (idx == 0) {
+        // ridiculous behavior of modulo
+        idxOld = option.dataset.source.time.length - 1;
       }
-      
-      ws.onmessage = function(e) {
-        // e.data contains received string.
-        data = JSON.parse(e.data);
-        option.series[0].data.shift();
-        option.series[0].data.push([ data["time"][0], data["x001"][0] ]);
-        option.xAxis.max = data["time"][0];
-        option.xAxis.min = option.xAxis.max - 20;
-        if (data["time"][0] > next_time) {
-          next_time = data["time"][0] + UPDATE_RATE;
-          my_chart.setOption(option);
-        //  update_list.forEach((value, index, array) => updateElement(value, data));
-        }
-      }
-      
-      ws.onerror = function(e) {
-        output("onerror");
-        console.log(e);
+      let tOld = option.dataset.source["time"][idxOld];
+      let tNew = data["time"][0] % 60;
+      if (tNew < tOld) {
+        idx = (idx + 1) % option.dataset.source.time.length;
       }
 
-      my_chart = echarts.init(document.getElementById('main'), 'mytheme');
+      // save values to current index
+      option.dataset.source["time"][idx] = tNew;
+      option.dataset.source["x001"][idx] = data["x001"][0];
+      option.dataset.source["x050"][idx] = data["x050"][0];
+      option.dataset.source["x100"][idx] = data["x100"][0];
+      option.dataset.source["x150"][idx] = data["x150"][0];
+
+      // increment index
+      idx = (idx + 1) % option.dataset.source.time.length;
+
+      // write nan's to incremented index, so lines don't connect
+      option.dataset.source["time"][idx] = NaN;
+      option.dataset.source["x001"][idx] = NaN;
+      option.dataset.source["x050"][idx] = NaN;
+      option.dataset.source["x100"][idx] = NaN;
+      option.dataset.source["x150"][idx] = NaN;
+
+      if (data["time"][0] > next_time) {
+        next_time = data["time"][0] + UPDATE_RATE;
+        myChart.setOption(option, {replaceMerge: ["dataset"]});
+        //myChart.resize(); // otherwise ticks are messed up
+      }
+    }
+      
+    function init_chart() {
+      myChart = echarts.init(document.getElementById('main'), 'mytheme', 
+        {renderer: "canvas", useDirtyRect: true});
+      let plotVars = []
       option = {
-        animationDurationUpdate: 100,
-        title: {
-          text: "A title"
-        },
+        animation: false,
+        animationDurationUpdate: 20,
+        title: { text: "A title" },
         tooltip: {},
-        xAxis: {},
-        yAxis: {min: -1.2, max: 1.2},
+        xAxis: { type: "value", min: 0.0, max: 60.0},
+        yAxis: {type: "value", min: -1.2, max: 1.2},
+        dataset: {
+          source: {
+            time: new Float64Array(5500).fill(NaN),
+            x001: new Float64Array(5500).fill(NaN),
+            x050: new Float64Array(5500).fill(NaN),
+            x100: new Float64Array(5500).fill(NaN),
+            x150: new Float64Array(5500).fill(NaN)
+          }
+        },
         series: [
-          {
-            data: Array(6000).fill( [NaN, NaN] ),
-            type: 'line'
+          { type: 'line', 
+            seriesLayoutBy: 'row', 
+            dimensions: ['time', 'x001'],
+            sampling: 'lltb'
+          },
+          { type: 'line', 
+            seriesLayoutBy: 'row', 
+            dimensions: ['time', 'x050'],
+            sampling: 'lltb'
+          },
+          { type: 'line', 
+            seriesLayoutBy: 'row', 
+            dimensions: ['time', 'x100'],
+            sampling: 'lltb'
+          },
+          { type: 'line', 
+            seriesLayoutBy: 'row', 
+            dimensions: ['time', 'x150'],
+            sampling: 'lltb'
           }
         ]
       };
-      my_chart.setOption(option);
+      // minmax sampling is faster, but doesn't play well with NaN's
+      myChart.setOption(option);
+
+      return {chart: myChart, opts: option};
     }
     
     function onCloseClick() {
