@@ -18,7 +18,7 @@
     var ws;
     
     var next_time = -9999.0;
-    const UPDATE_RATE = 0.05;
+    const UPDATE_RATE = 0.02;
     var idx = 0; // index into circular buffers
 
     function init() {
@@ -74,11 +74,14 @@
       option.dataset.source["x100"][idx] = NaN;
       option.dataset.source["x150"][idx] = NaN;
 
-      if (data["time"][0] > next_time) {
-        next_time = data["time"][0] + UPDATE_RATE;
-        myChart.setOption(option, {replaceMerge: ["dataset"]});
-        //myChart.resize(); // otherwise ticks are messed up
-      }
+      requestAnimationFrame(()=>{
+        myChart.setOption(option);
+      })
+      //if (data["time"][0] > next_time) {
+      //  next_time = data["time"][0] + UPDATE_RATE;
+      //  myChart.setOption(option, {replaceMerge: ["dataset"]});
+      //  //myChart.resize(); // otherwise ticks are messed up
+      //}
     }
       
     function init_chart() {

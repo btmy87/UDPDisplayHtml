@@ -1,0 +1,241 @@
+<html>
+  <title>UDP Display</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="stylesheet" href="https://www.w3schools.com/w3css/4/w3.css">
+  <link rel="stylesheet" href="https://www.w3schools.com/lib/w3-theme-dark-grey.css">
+  <script src="../smoothie-1.36.1/smoothie.js"></script>
+<style>
+  body {
+    background-color: black
+  }
+</style>
+<head>
+  <title>Simple client</title>
+
+  <script type="text/javascript">
+
+    var ws;
+    
+    var update_list;
+    var next_time = -9999.0;
+    const UPDATE_RATE = 0.1;
+
+    function updateElement(x, data) {
+      // update the object x with the corresponding value
+      // from the full json data
+      let val = data[x.id][0]
+      let sep = " = "
+      if (val >= 0) {
+        sep += "&nbsp"
+      }
+      let n = 4;
+      if (x.id == "time") { n = 2; }
+      x.innerHTML = x.id + sep + val.toFixed(n)
+
+      if (x.id == "time") {
+        return;
+      }
+
+      if (val < -0.9 & !x.classList.contains("w3-blue")) {
+        x.classList.add("w3-blue");
+      } else if (val > -0.9 & x.classList.contains("w3-blue")) {
+        x.classList.remove("w3-blue");
+      }
+      if (val > 0.9 & !x.classList.contains("w3-red")) {
+        x.classList.add("w3-red");
+      } else if (val < 0.9 & x.classList.contains("w3-red")) {
+        x.classList.remove("w3-red");
+      }
+    }
+
+    function init() {
+      // get list of cells to update
+      update_list = Array.from(document.getElementsByClassName("mydata"));
+      plot_list = Array.from(document.getElementsByClassName("myplot"));
+      chart_list = plot_list.map(function (value) {
+        value.width = 140;
+        value.height = 50;
+          let smoothie = new SmoothieChart(
+            {
+              minValue: -1.2,
+              maxValue: 1.2,
+              millisPerPixel: 200,
+              grid: {
+                lineWidth: 0.5,
+                strokeStyle: '#333333',
+                verticalSections: 12,
+                millisPerLine: 1000
+              }
+            }
+          );
+          smoothie.streamTo(value, 10);
+          let line = new TimeSeries();
+          smoothie.addTimeSeries(line, 
+            {
+              strokeStyle: 'rgb(0, 114, 189)',
+              fillStyle: 'rgba(0, 114, 189, 0.3)',
+              lineWidth: 2
+            }
+          );
+          return {canvas: value, chart: smoothie, line: line};
+        });
+
+      // Connect to Web Socket
+      ws = new WebSocket("ws://localhost:41953/");
+
+      // Set event handlers.
+      ws.onopen = () => console.log("ws.onopen");
+      ws.onerror = (e) => console.log(e);
+      
+      ws.onmessage = function(e) {
+        // e.data contains received string.
+        data = JSON.parse(e.data);
+        if (data["time"][0] > next_time) {
+          next_time = data["time"][0] + UPDATE_RATE;
+          update_list.forEach((value, index, array) => updateElement(value, data));
+        }
+        chart_list.forEach((value, index, array) => value.line.append(Date.now(), 
+          data[value.canvas.dataset.plotvar][0]));
+      }
+    }
+    
+    function onCloseClick() {
+      ws.close();
+    }
+    
+  </script>
+</head>
+<body class="w3-monospace w3-theme-dark" onload="init();">
+  <table class="w3-table w3-large">
+    <tr>
+      <td class="mydata" id="time"></td>
+      <td>
+        <div class="mydata" id="x001"></div>
+        <canvas class="myplot" data-plotvar="x001"></canvas>
+      </td>
+      <td>
+        <div class="mydata" id="x002"></div>
+        <canvas class="myplot" data-plotvar="x001"></canvas>
+      </td>
+      <td>
+        <div class="mydata" id="x003"></div>
+        <canvas class="myplot" data-plotvar="x001"></canvas>
+      </td>
+      <td>
+        <div class="mydata" id="x004"></div>
+        <canvas class="myplot" data-plotvar="x001"></canvas>
+      </td>
+    </tr>
+    <tr>
+      <td>
+        <div class="mydata" id="x005"></div>
+        <canvas class="myplot" data-plotvar="x001"></canvas>
+      </td>
+      <td>
+        <div class="mydata" id="x006"></div>
+        <canvas class="myplot" data-plotvar="x001"></canvas>
+      </td>
+      <td>
+        <div class="mydata" id="x007"></div>
+        <canvas class="myplot" data-plotvar="x001"></canvas>
+      </td>
+      <td>
+        <div class="mydata" id="x008"></div>
+        <canvas class="myplot" data-plotvar="x001"></canvas>
+      </td>
+      <td>
+        <div class="mydata" id="x009"></div>
+        <canvas class="myplot" data-plotvar="x001"></canvas>
+      </td>
+    </tr>
+    <tr>
+      <td>
+        <div class="mydata" id="x010"></div>
+        <canvas class="myplot" data-plotvar="x001"></canvas>
+      </td>
+      <td>
+        <div class="mydata" id="x011"></div>
+        <canvas class="myplot" data-plotvar="x001"></canvas>
+      </td>
+      <td>
+        <div class="mydata" id="x012"></div>
+        <canvas class="myplot" data-plotvar="x001"></canvas>
+      </td>
+      <td>
+        <div class="mydata" id="x013"></div>
+        <canvas class="myplot" data-plotvar="x001"></canvas>
+      </td>
+      <td>
+        <div class="mydata" id="x014"></div>
+        <canvas class="myplot" data-plotvar="x001"></canvas>
+      </td>
+    </tr>
+    <tr>
+      <td>
+        <div class="mydata" id="x015"></div>
+        <canvas class="myplot" data-plotvar="x001"></canvas>
+      </td>
+      <td>
+        <div class="mydata" id="x016"></div>
+        <canvas class="myplot" data-plotvar="x001"></canvas>
+      </td>
+      <td>
+        <div class="mydata" id="x017"></div>
+        <canvas class="myplot" data-plotvar="x001"></canvas>
+      </td>
+      <td>
+        <div class="mydata" id="x018"></div>
+        <canvas class="myplot" data-plotvar="x001"></canvas>
+      </td>
+      <td>
+        <div class="mydata" id="x019"></div>
+        <canvas class="myplot" data-plotvar="x001"></canvas>
+      </td>
+    </tr>
+    <tr>
+      <td>
+        <div class="mydata" id="x020"></div>
+        <canvas class="myplot" data-plotvar="x001"></canvas>
+      </td>
+      <td>
+        <div class="mydata" id="x021"></div>
+        <canvas class="myplot" data-plotvar="x001"></canvas>
+      </td>
+      <td>
+        <div class="mydata" id="x022"></div>
+        <canvas class="myplot" data-plotvar="x001"></canvas>
+      </td>
+      <td>
+        <div class="mydata" id="x023"></div>
+        <canvas class="myplot" data-plotvar="x001"></canvas>
+      </td>
+      <td>
+        <div class="mydata" id="x024"></div>
+        <canvas class="myplot" data-plotvar="x001"></canvas>
+      </td>
+    </tr>
+    <tr>
+      <td>
+        <div class="mydata" id="x025"></div>
+        <canvas class="myplot" data-plotvar="x001"></canvas>
+      </td>
+      <td>
+        <div class="mydata" id="x026"></div>
+        <canvas class="myplot" data-plotvar="x001"></canvas>
+      </td>
+      <td>
+        <div class="mydata" id="x027"></div>
+        <canvas class="myplot" data-plotvar="x001"></canvas>
+      </td>
+      <td>
+        <div class="mydata" id="x028"></div>
+        <canvas class="myplot" data-plotvar="x001"></canvas>
+      </td>
+      <td>
+        <div class="mydata" id="x029"></div>
+        <canvas class="myplot" data-plotvar="x001"></canvas>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>
